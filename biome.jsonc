@@ -1,0 +1,35 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
+  "extends": ["ultracite"],
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noConsole": "off",
+        "noArrayIndexKey": "off"
+      },
+      "style": {
+        "useBlockStatements": "off",
+        "noNonNullAssertion": "off",
+        "noNestedTernary": "off",
+        "useDefaultSwitchClause": "off"
+      },
+      "performance": {
+        "noDelete": "off",
+        "useTopLevelRegex": "off",
+        "noNamespaceImport": "off"
+      },
+      "complexity": {
+        "noForEach": "off",
+        "useDateNow": "off"
+      },
+      "nursery": {
+        "noNestedComponentDefinitions": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "semicolons": "asNeeded"
+    }
+  }
+}
