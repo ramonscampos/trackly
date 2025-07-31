@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
-import { NavigationLoading } from '@/components/NavigationLoading'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -30,7 +29,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NavigationLoading />
         <AuthProvider>
           <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
             <main className="mx-auto max-w-7xl pt-24 pb-8 sm:px-6 lg:px-8">

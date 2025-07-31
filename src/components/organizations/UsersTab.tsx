@@ -14,6 +14,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Button } from '@/components/ui/button'
 import { ConfirmModal } from '@/components/ui/confirm-modal'
+import { InviteUserModal } from '@/components/ui/invite-user-modal'
 import {
   getOrganizationUsersWithProfiles,
   removeOrganizationUser,
@@ -34,6 +35,7 @@ export function UsersTab({ organizationId }: UsersTabProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] =
     useState<OrganizationUserWithProfile | null>(null)
+  const [showInviteModal, setShowInviteModal] = useState(false)
 
   const loadUsers = useCallback(async () => {
     setLoading(true)
@@ -52,11 +54,15 @@ export function UsersTab({ organizationId }: UsersTabProps) {
   }, [loadUsers])
 
   const handleInviteUser = () => {
-    // TODO: Implementar convite de usuário
-    alert('Funcionalidade de convite será implementada em breve')
+    setShowInviteModal(true)
   }
 
-  const handleEditUser = (userId: string) => {
+  const handleInviteSent = () => {
+    // Recarregar a lista de usuários após o convite
+    loadUsers()
+  }
+
+  const handleEditUser = (_userId: string) => {
     // TODO: Implementar edição de usuário
     alert('Funcionalidade de edição será implementada em breve')
   }
@@ -243,6 +249,13 @@ export function UsersTab({ organizationId }: UsersTabProps) {
         onConfirm={confirmDelete}
         title="Remover Usuário"
         variant="danger"
+      />
+
+      <InviteUserModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onInviteSent={handleInviteSent}
+        organizationId={organizationId}
       />
     </div>
   )

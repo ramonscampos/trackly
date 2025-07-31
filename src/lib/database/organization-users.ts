@@ -233,3 +233,105 @@ export async function demoteUserToUser(
   })
   return !!result
 }
+
+export async function createOrganizationInvite(
+  organizationId: string,
+  email: string,
+  role: 'admin' | 'manager' | 'user'
+): Promise<boolean> {
+  const { error } = await supabase.from('organization_invites').insert({
+    organization_id: organizationId,
+    email: email.toLowerCase().trim(),
+    role,
+  })
+
+  if (error) {
+    console.error('Erro ao criar convite:', error)
+    return false
+  }
+
+  return true
+}
+
+export async function getPendingInvitesByEmail(email: string): Promise<
+  Array<{
+    id: string
+    organization_id: string
+    email: string
+    role: 'admin' | 'manager' | 'user'
+    created_at: string
+  }>
+> {
+  const { data, error } = await supabase
+    .from('organization_invites')
+    .select('*')
+    .eq('email', email.toLowerCase().trim())
+
+  if (error) {
+    console.error('Erro ao buscar convites pendentes:', error)
+    return []
+  }
+
+  return data || []
+}
+
+export async function processInvite(
+  inviteId: string,
+  userId: string
+): Promise<boolean> {
+  // Primeiro, buscar o convite
+  const { data: invite, error: inviteError } = await supabase
+    .from('organization_invites')
+    .select('*')
+    .eq('id', inviteId)
+    .single()
+
+  if (inviteError || !invite) {
+    console.error('Erro ao buscar convite:', inviteError)
+    return false
+  }
+
+  // Adicionar usuário à organização
+  const { error: addUserError } = await supabase
+    .from('organization_users')
+    .insert({
+      organization_id: invite.organization_id,
+      user_id: userId,
+      role: invite.role,
+    })
+
+  if (addUserError) {
+    console.error('Erro ao adicionar usuário à organização:', addUserError)
+    return false
+  }
+
+  // Deletar o convite
+  const { error: deleteError } = await supabase
+    .from('organization_invites')
+    .delete()
+    .eq('id', inviteId)
+
+  if (deleteError) {
+    console.error('Erro ao deletar convite:', deleteError)
+    return false
+  }
+
+  return true
+}
+
+export async function processAllPendingInvites(
+  email: string,
+  userId: string
+): Promise<number> {
+  const pendingInvites = await getPendingInvitesByEmail(email)
+  let processedCount = 0
+
+  for (const invite of pendingInvites) {
+    const success = await processInvite(invite.id, userId)
+    if (success) {
+      processedCount++
+    }
+  }
+
+  return processedCount
+}
