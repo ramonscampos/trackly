@@ -31,6 +31,9 @@ interface ProjectCardProps {
   hours: string
   lastActivity: string
   canManageTimeEntries?: boolean
+  onStartTimer?: (projectId: string) => void
+  onAddTimeEntry?: (projectId: string) => void
+  hasActiveTimer?: boolean
 }
 
 export function ProjectCard({
@@ -42,6 +45,9 @@ export function ProjectCard({
   hours,
   lastActivity,
   canManageTimeEntries = false,
+  onStartTimer,
+  onAddTimeEntry,
+  hasActiveTimer = false,
 }: ProjectCardProps) {
   const { user } = useAuth()
   const router = useRouter()
@@ -99,48 +105,33 @@ export function ProjectCard({
             </div>
             <p className="text-gray-500 text-xs">{lastActivity}</p>
           </div>
-          {canManageTimeEntries ? (
-            // Usuário tem permissões de gestão - usa dropdown
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  className="h-8 w-8 cursor-pointer p-0"
-                  size="sm"
-                  variant="ghost"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-48 border-gray-600 bg-gray-800"
+          <div className="flex items-center space-x-1">
+            {/* Botão para iniciar timer - só aparece se não há timer ativo */}
+            {!hasActiveTimer && (
+              <Button
+                className="h-8 w-8 cursor-pointer p-0"
+                disabled={status === 'finished'}
+                onClick={() => onStartTimer?.(projectId) || handleStartTimer()}
+                size="sm"
+                title="Iniciar timer"
+                variant="ghost"
               >
-                <DropdownMenuItem
-                  className="cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white"
-                  disabled={status === 'finished'}
-                  onClick={handleStartTimer}
-                >
-                  <Play className="mr-2 h-4 w-4" />
-                  Iniciar timer
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white"
-                  onClick={handleViewTimeEntries}
-                >
-                  <List className="mr-2 h-4 w-4" />
-                  Ver meus apontamentos
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white"
-                  onClick={handleManageTimeEntries}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Gerenciar apontamentos
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            // Usuário comum - botão direto para ver apontamentos
+                <Play className="h-4 w-4 text-green-400" />
+              </Button>
+            )}
+
+            {/* Botão para adicionar time entry */}
+            <Button
+              className="h-8 w-8 cursor-pointer p-0"
+              onClick={() => onAddTimeEntry?.(projectId)}
+              size="sm"
+              title="Adicionar apontamento"
+              variant="ghost"
+            >
+              <Clock className="h-4 w-4 text-blue-400" />
+            </Button>
+
+            {/* Botão para ver apontamentos */}
             <Button
               className="h-8 w-8 cursor-pointer p-0"
               onClick={handleViewTimeEntries}
@@ -148,9 +139,36 @@ export function ProjectCard({
               title="Ver meus apontamentos"
               variant="ghost"
             >
-              <List className="h-4 w-4" />
+              <List className="h-4 w-4 text-gray-400" />
             </Button>
-          )}
+
+            {/* Dropdown para gestores */}
+            {canManageTimeEntries && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    className="h-8 w-8 cursor-pointer p-0"
+                    size="sm"
+                    variant="ghost"
+                  >
+                    <MoreHorizontal className="h-4 w-4 text-gray-400" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 border-gray-600 bg-gray-800"
+                >
+                  <DropdownMenuItem
+                    className="cursor-pointer text-gray-300 hover:bg-gray-700 hover:text-white"
+                    onClick={handleManageTimeEntries}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Gerenciar apontamentos
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
         </div>
       </div>
 

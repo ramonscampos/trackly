@@ -48,14 +48,6 @@ export function WeekHoursCard() {
     lastWeek: number
   ): { change: string; changeType: 'positive' | 'negative' | 'neutral' } => {
     const difference = thisWeek - lastWeek
-    console.log(
-      'WeekHoursCard - thisWeek:',
-      thisWeek,
-      'lastWeek:',
-      lastWeek,
-      'difference:',
-      difference
-    )
 
     if (difference === 0) {
       return {
@@ -65,16 +57,14 @@ export function WeekHoursCard() {
     }
 
     if (difference > 0) {
-      const result = `+${formatHours(difference)} vs semana passada`
       return {
-        change: result,
+        change: `+${formatHours(difference)} vs semana passada`,
         changeType: 'positive',
       }
     }
 
-    const result = `${formatHours(Math.abs(difference))} vs semana passada`
     return {
-      change: result,
+      change: `${formatHours(Math.abs(difference))} vs semana passada`,
       changeType: 'negative',
     }
   }

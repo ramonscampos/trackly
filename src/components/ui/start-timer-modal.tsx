@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { X, Clock, Building, Folder } from 'lucide-react'
+import { Building, Clock, Folder, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -10,9 +10,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { startTimer } from '@/lib/database/time-entries'
 import { getOrganizationsByUserId } from '@/lib/database/organizations'
 import { getProjectsByOrganizationId } from '@/lib/database/projects'
+import { startTimer } from '@/lib/database/time-entries'
 import type { Organization, Project } from '@/lib/database/types'
 
 interface StartTimerModalProps {
@@ -64,7 +64,7 @@ export function StartTimerModal({
   const loadProjects = async (organizationId: string) => {
     try {
       const projs = await getProjectsByOrganizationId(organizationId)
-      setProjects(projs.filter(project => !project.is_finished)) // Apenas projetos ativos
+      setProjects(projs.filter((project) => !project.is_finished)) // Apenas projetos ativos
     } catch (error) {
       console.error('Erro ao carregar projetos:', error)
       setError('Erro ao carregar projetos')
@@ -73,7 +73,7 @@ export function StartTimerModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!selectedOrganization) {
       setError('Selecione uma organização')
       return
@@ -124,30 +124,30 @@ export function StartTimerModal({
       {/* Modal */}
       <div className="relative w-full max-w-md rounded-lg border border-gray-700 bg-gray-800 p-6 shadow-2xl">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">Iniciar Timer</h2>
+          <h2 className="font-semibold text-white text-xl">Iniciar Timer</h2>
           <Button
-            onClick={handleClose}
-            variant="ghost"
-            size="sm"
             className="h-8 w-8 p-0"
             disabled={isLoading}
+            onClick={handleClose}
+            size="sm"
+            variant="ghost"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {/* Organização */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-300">
+            <label className="mb-2 block font-medium text-gray-300 text-sm">
               Organização
             </label>
             <Select
-              value={selectedOrganization}
-              onValueChange={setSelectedOrganization}
               disabled={isLoading}
+              onValueChange={setSelectedOrganization}
+              value={selectedOrganization}
             >
-              <SelectTrigger className="w-full border-gray-600 bg-gray-700 text-white focus:border-gray-500 focus:ring-gray-500 hover:bg-gray-600">
+              <SelectTrigger className="w-full border-gray-600 bg-gray-700 text-white hover:bg-gray-600 focus:border-gray-500 focus:ring-gray-500">
                 <SelectValue placeholder="Selecione uma organização" />
               </SelectTrigger>
               <SelectContent className="border-gray-600 bg-gray-800 text-white">
@@ -165,21 +165,21 @@ export function StartTimerModal({
 
           {/* Projeto */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-300">
+            <label className="mb-2 block font-medium text-gray-300 text-sm">
               Projeto
             </label>
             <Select
-              value={selectedProject}
-              onValueChange={setSelectedProject}
               disabled={isLoading || !selectedOrganization}
+              onValueChange={setSelectedProject}
+              value={selectedProject}
             >
-              <SelectTrigger className="w-full border-gray-600 bg-gray-700 text-white focus:border-gray-500 focus:ring-gray-500 hover:bg-gray-600">
-                <SelectValue 
+              <SelectTrigger className="w-full border-gray-600 bg-gray-700 text-white hover:bg-gray-600 focus:border-gray-500 focus:ring-gray-500">
+                <SelectValue
                   placeholder={
-                    selectedOrganization 
-                      ? 'Selecione um projeto' 
+                    selectedOrganization
+                      ? 'Selecione um projeto'
                       : 'Primeiro selecione uma organização'
-                  } 
+                  }
                 />
               </SelectTrigger>
               <SelectContent className="border-gray-600 bg-gray-800 text-white">
@@ -194,7 +194,7 @@ export function StartTimerModal({
               </SelectContent>
             </Select>
             {selectedOrganization && projects.length === 0 && (
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-gray-500 text-xs">
                 Nenhum projeto ativo encontrado nesta organização
               </p>
             )}
@@ -203,25 +203,25 @@ export function StartTimerModal({
           {/* Error */}
           {error && (
             <div className="rounded-lg border border-red-700 bg-red-900/50 p-3">
-              <p className="text-sm text-red-200">{error}</p>
+              <p className="text-red-200 text-sm">{error}</p>
             </div>
           )}
 
           {/* Actions */}
           <div className="flex space-x-3 pt-4">
             <Button
-              type="button"
-              onClick={handleClose}
-              variant="outline"
               className="flex-1"
               disabled={isLoading}
+              onClick={handleClose}
+              type="button"
+              variant="outline"
             >
               Cancelar
             </Button>
             <Button
-              type="submit"
               className="flex-1 cursor-pointer"
               disabled={isLoading || !selectedOrganization || !selectedProject}
+              type="submit"
             >
               {isLoading ? (
                 <>
@@ -240,4 +240,4 @@ export function StartTimerModal({
       </div>
     </div>
   )
-} 
+}

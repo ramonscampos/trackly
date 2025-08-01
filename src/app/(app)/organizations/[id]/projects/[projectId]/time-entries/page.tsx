@@ -11,6 +11,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { use, useCallback, useEffect, useMemo, useState } from 'react'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { AddTimeEntryModal } from '@/components/ui/add-time-entry-modal'
 import { Button } from '@/components/ui/button'
 import { ConfirmDeleteModal } from '@/components/ui/confirm-delete-modal'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -55,6 +56,7 @@ export default function ProjectTimeEntriesPage({ params }: PageProps) {
     useState<TimeEntryWithDetails | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   const { id: organizationId, projectId } = use(params)
 
@@ -159,8 +161,9 @@ export default function ProjectTimeEntriesPage({ params }: PageProps) {
     const groups: { [key: string]: TimeEntryWithDetails[] } = {}
 
     filteredEntries.forEach((entry) => {
-      const date = new Date(entry.started_at)
-      const dateKey = date.toISOString().split('T')[0] // YYYY-MM-DD
+      // Usar data UTC para agrupamento (extrair YYYY-MM-DD da string UTC)
+      const utcDateString = entry.started_at.split('T')[0] // Pega só a parte da data
+      const dateKey = utcDateString
 
       if (!groups[dateKey]) {
         groups[dateKey] = []
@@ -170,14 +173,21 @@ export default function ProjectTimeEntriesPage({ params }: PageProps) {
 
     // Converter para array e ordenar por data (mais recente primeiro)
     return Object.entries(groups)
-      .map(([dateKey, entries]) => ({
-        dateKey,
-        date: new Date(dateKey),
-        entries: entries.sort(
-          (a, b) =>
-            new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
-        ),
-      }))
+      .map(([dateKey, entries]) => {
+        // Criar data UTC a partir da chave YYYY-MM-DD
+        const [year, month, day] = dateKey.split('-').map(Number)
+        const date = new Date(Date.UTC(year, month - 1, day)) // Usar UTC para evitar conversão de fuso horário
+
+        return {
+          dateKey,
+          date,
+          entries: entries.sort(
+            (a, b) =>
+              new Date(b.started_at).getTime() -
+              new Date(a.started_at).getTime()
+          ),
+        }
+      })
       .sort((a, b) => b.date.getTime() - a.date.getTime())
   }, [filteredEntries])
 
@@ -225,6 +235,18 @@ export default function ProjectTimeEntriesPage({ params }: PageProps) {
     if (user) {
       loadData()
     }
+  }
+
+  const handleAddTimeEntry = () => {
+    setIsAddModalOpen(true)
+  }
+
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false)
+  }
+
+  const handleTimeEntryAdded = () => {
+    loadData() // Recarregar dados
   }
 
   const handleDeleteTimeEntry = (timeEntry: TimeEntryWithDetails) => {
@@ -339,10 +361,20 @@ export default function ProjectTimeEntriesPage({ params }: PageProps) {
   return (
     <>
       <div className="mb-8">
-        <Button className="mb-4" onClick={handleBack} variant="ghost">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
+        <div className="mb-4 flex items-center justify-between">
+          <Button onClick={handleBack} variant="ghost">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar
+          </Button>
+          <Button
+            className="cursor-pointer"
+            onClick={handleAddTimeEntry}
+            size="sm"
+          >
+            <Clock className="mr-2 h-4 w-4" />
+            Adicionar Apontamento
+          </Button>
+        </div>
         <h1 className="font-bold text-3xl text-white">Meus Apontamentos</h1>
         <p className="mt-2 text-gray-400">Projeto: {project.name}</p>
       </div>
@@ -559,6 +591,15 @@ export default function ProjectTimeEntriesPage({ params }: PageProps) {
         onClose={handleCloseDeleteModal}
         onConfirm={handleConfirmDelete}
         title="Deletar Apontamento"
+      />
+
+      {/* Modal de Adicionar Time Entry */}
+      <AddTimeEntryModal
+        isOpen={isAddModalOpen}
+        onClose={handleCloseAddModal}
+        onTimeEntryAdded={handleTimeEntryAdded}
+        projectId={projectId}
+        userId={user.id}
       />
     </>
   )

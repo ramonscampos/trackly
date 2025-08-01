@@ -10,11 +10,17 @@ import { ProjectCard } from './ProjectCard'
 interface ProjectsListProps {
   refreshKey?: number
   organizationId?: string
+  onStartTimer?: (projectId: string) => void
+  onAddTimeEntry?: (projectId: string) => void
+  hasActiveTimer?: boolean
 }
 
 export function ProjectsList({
   refreshKey = 0,
   organizationId,
+  onStartTimer,
+  onAddTimeEntry,
+  hasActiveTimer = false,
 }: ProjectsListProps) {
   const { user } = useAuth()
   // No dashboard, não temos organizationId específico, então não verificamos permissões
@@ -93,10 +99,13 @@ export function ProjectsList({
                   {org.projects.map((project, projectIndex) => (
                     <ProjectCard
                       canManageTimeEntries={canViewAllTimeEntries}
+                      hasActiveTimer={hasActiveTimer}
                       hours={project.total_hours}
                       key={projectIndex}
                       lastActivity={project.last_activity}
                       name={project.name}
+                      onAddTimeEntry={onAddTimeEntry}
+                      onStartTimer={onStartTimer}
                       organization={org.organization.name}
                       organizationId={org.organization.id}
                       projectId={project.id}

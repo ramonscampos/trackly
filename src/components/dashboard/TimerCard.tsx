@@ -13,9 +13,14 @@ import type { Organization, Project, TimeEntry } from '@/lib/database/types'
 interface TimerCardProps {
   userId: string
   onTimerStopped?: () => void
+  onTimerStarted?: () => void
 }
 
-export function TimerCard({ userId, onTimerStopped }: TimerCardProps) {
+export function TimerCard({
+  userId,
+  onTimerStopped,
+  onTimerStarted,
+}: TimerCardProps) {
   const [activeTimer, setActiveTimer] = useState<TimeEntry | null>(null)
   const [currentProject, setCurrentProject] = useState<Project | null>(null)
   const [currentOrganization, setCurrentOrganization] =
@@ -195,7 +200,12 @@ export function TimerCard({ userId, onTimerStopped }: TimerCardProps) {
       <StartTimerModal
         isOpen={showStartModal}
         onClose={() => setShowStartModal(false)}
-        onTimerStarted={loadActiveTimer}
+        onTimerStarted={() => {
+          loadActiveTimer()
+          if (onTimerStarted) {
+            onTimerStarted()
+          }
+        }}
         userId={userId}
       />
     </>

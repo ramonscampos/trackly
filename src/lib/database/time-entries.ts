@@ -349,6 +349,7 @@ export async function getTotalHoursByDateRange(
     .eq('user_id', userId)
     .gte('started_at', startDate)
     .lte('started_at', endDate)
+    .not('ended_at', 'is', null) // Excluir timers abertos (ended_at = null)
 
   if (error) {
     console.error('Erro ao calcular total de horas:', error)
@@ -596,6 +597,7 @@ export async function getUserProjectsWithTimeEntries(
     `)
     .eq('user_id', userId)
     .not('project_id', 'is', null)
+    .not('ended_at', 'is', null) // Excluir timers abertos (ended_at = null)
 
   // Aplicar filtros de data se fornecidos
   if (startDate) {

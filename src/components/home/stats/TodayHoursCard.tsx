@@ -48,31 +48,20 @@ export function TodayHoursCard() {
     yesterday: number
   ): { change: string; changeType: 'positive' | 'negative' | 'neutral' } => {
     const difference = today - yesterday
-    console.log(
-      'TodayHoursCard - today:',
-      today,
-      'yesterday:',
-      yesterday,
-      'difference:',
-      difference
-    )
 
     if (difference === 0) {
       return { change: `${formatHours(0)} vs ontem`, changeType: 'neutral' }
     }
 
     if (difference > 0) {
-      const result = `+${formatHours(difference)} vs ontem`
-      console.log('TodayHoursCard - positive result:', result)
       return {
-        change: result,
+        change: `+${formatHours(difference)} vs ontem`,
         changeType: 'positive',
       }
     }
 
-    const result = `${formatHours(Math.abs(difference))} vs ontem`
     return {
-      change: result,
+      change: `${formatHours(Math.abs(difference))} vs ontem`,
       changeType: 'negative',
     }
   }
