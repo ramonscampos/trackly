@@ -45,6 +45,11 @@ export default function LoginPage() {
     }
   }, [])
 
+  const redirectTo =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/auth/callback`
+      : undefined
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       <div className="relative hidden items-center justify-center overflow-hidden lg:flex lg:w-1/2">
@@ -233,11 +238,7 @@ export default function LoginPage() {
                 }}
                 onlyThirdPartyProviders={true}
                 providers={['google']}
-                redirectTo={
-                  typeof window !== 'undefined'
-                    ? `${window.location.origin}/auth/callback`
-                    : ''
-                }
+                redirectTo={redirectTo}
                 showLinks={false}
                 supabaseClient={supabase}
                 view="sign_in"
