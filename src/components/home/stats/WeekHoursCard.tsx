@@ -47,31 +47,36 @@ export function WeekHoursCard() {
     thisWeek: number,
     lastWeek: number
   ): { change: string; changeType: 'positive' | 'negative' | 'neutral' } => {
-    if (lastWeek === 0) {
-      if (thisWeek === 0) {
-        return {
-          change: `${formatHours(0)} vs semana passada`,
-          changeType: 'neutral',
-        }
+    const difference = thisWeek - lastWeek
+    console.log(
+      'WeekHoursCard - thisWeek:',
+      thisWeek,
+      'lastWeek:',
+      lastWeek,
+      'difference:',
+      difference
+    )
+
+    if (difference === 0) {
+      return {
+        change: `${formatHours(0)} vs semana passada`,
+        changeType: 'neutral',
       }
-      return { change: '+100% vs semana passada', changeType: 'positive' }
     }
 
-    const percentage = ((thisWeek - lastWeek) / lastWeek) * 100
-
-    if (percentage > 0) {
+    if (difference > 0) {
+      const result = `+${formatHours(difference)} vs semana passada`
       return {
-        change: `+${percentage.toFixed(0)}% vs semana passada`,
+        change: result,
         changeType: 'positive',
       }
     }
-    if (percentage < 0) {
-      return {
-        change: `${percentage.toFixed(0)}% vs semana passada`,
-        changeType: 'negative',
-      }
+
+    const result = `${formatHours(Math.abs(difference))} vs semana passada`
+    return {
+      change: result,
+      changeType: 'negative',
     }
-    return { change: '0% vs semana passada', changeType: 'neutral' }
   }
 
   const { change, changeType } = calculateChange(thisWeekHours, lastWeekHours)

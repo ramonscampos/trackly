@@ -47,28 +47,34 @@ export function TodayHoursCard() {
     today: number,
     yesterday: number
   ): { change: string; changeType: 'positive' | 'negative' | 'neutral' } => {
-    if (yesterday === 0) {
-      if (today === 0) {
-        return { change: `${formatHours(0)} vs ontem`, changeType: 'neutral' }
-      }
-      return { change: '+100% vs ontem', changeType: 'positive' }
+    const difference = today - yesterday
+    console.log(
+      'TodayHoursCard - today:',
+      today,
+      'yesterday:',
+      yesterday,
+      'difference:',
+      difference
+    )
+
+    if (difference === 0) {
+      return { change: `${formatHours(0)} vs ontem`, changeType: 'neutral' }
     }
 
-    const percentage = ((today - yesterday) / yesterday) * 100
-
-    if (percentage > 0) {
+    if (difference > 0) {
+      const result = `+${formatHours(difference)} vs ontem`
+      console.log('TodayHoursCard - positive result:', result)
       return {
-        change: `+${percentage.toFixed(0)}% vs ontem`,
+        change: result,
         changeType: 'positive',
       }
     }
-    if (percentage < 0) {
-      return {
-        change: `${percentage.toFixed(0)}% vs ontem`,
-        changeType: 'negative',
-      }
+
+    const result = `${formatHours(Math.abs(difference))} vs ontem`
+    return {
+      change: result,
+      changeType: 'negative',
     }
-    return { change: '0% vs ontem', changeType: 'neutral' }
   }
 
   const { change, changeType } = calculateChange(todayHours, yesterdayHours)
