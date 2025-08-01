@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 import { Header } from '@/components/layout/Header'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { InviteProvider } from './InviteProvider'
 
 interface AuthProviderProps {
   children: React.ReactNode
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   return (
-    <>
+    <InviteProvider user={user}>
       {user && (
         <Header
           onSignOut={handleSignOut}
@@ -38,6 +39,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         />
       )}
       {children}
-    </>
+    </InviteProvider>
   )
 }

@@ -32,7 +32,7 @@ export async function getOrganizationUserByOrganizationAndUser(
     .select('*')
     .eq('organization_id', organizationId)
     .eq('user_id', userId)
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error('Erro ao buscar organization user:', error)
@@ -125,6 +125,14 @@ export async function createOrganizationUser(
     .single()
 
   if (error) {
+    // Se o erro for 409 (usuário já existe), não é um erro real
+    if (error.code === '23505') {
+      console.log('Usuário já existe na organização (409)')
+      return {
+        ...organizationUser,
+        created_at: new Date().toISOString(),
+      } as OrganizationUser
+    }
     console.error('Erro ao adicionar usuário à organização:', error)
     return null
   }
@@ -284,24 +292,53 @@ export async function processInvite(
     .from('organization_invites')
     .select('*')
     .eq('id', inviteId)
-    .single()
+    .maybeSingle()
 
-  if (inviteError || !invite) {
+  if (inviteError) {
+    // Se o erro for porque o convite não existe, não é um erro real
+    if (inviteError.code === 'PGRST116') {
+      console.log('Convite não encontrado (provavelmente já foi processado)')
+      return true
+    }
     console.error('Erro ao buscar convite:', inviteError)
     return false
   }
 
-  // Adicionar usuário à organização
-  const { error: addUserError } = await supabase
-    .from('organization_users')
-    .insert({
-      organization_id: invite.organization_id,
-      user_id: userId,
-      role: invite.role,
-    })
+  if (!invite) {
+    console.log('Convite não encontrado')
+    return true
+  }
 
-  if (addUserError) {
-    console.error('Erro ao adicionar usuário à organização:', addUserError)
+  // Verificar se o usuário já existe na organização
+  const existingUser = await getOrganizationUserByOrganizationAndUser(
+    invite.organization_id,
+    userId
+  )
+
+  if (existingUser) {
+    // Se o usuário já existe, apenas deletar o convite
+    const { error: deleteInviteError } = await supabase
+      .from('organization_invites')
+      .delete()
+      .eq('id', inviteId)
+
+    if (deleteInviteError) {
+      console.error('Erro ao deletar convite:', deleteInviteError)
+      return false
+    }
+
+    return true
+  }
+
+  // Adicionar usuário à organização usando a função existente
+  const newUser = await createOrganizationUser({
+    organization_id: invite.organization_id,
+    user_id: userId,
+    role: invite.role,
+  })
+
+  if (!newUser) {
+    console.error('Erro ao adicionar usuário à organização')
     return false
   }
 
@@ -326,6 +363,7 @@ export async function processAllPendingInvites(
   const pendingInvites = await getPendingInvitesByEmail(email)
   let processedCount = 0
 
+  // Processar convites sequencialmente para evitar condições de corrida
   for (const invite of pendingInvites) {
     const success = await processInvite(invite.id, userId)
     if (success) {
