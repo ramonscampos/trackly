@@ -59,3 +59,13 @@ export function formatHoursToDisplay(hours: number): string {
 
   return `${wholeHours}h${minutes.toString().padStart(2, '0')}m`
 }
+
+/**
+ * Converte horário local para UTC preservando o horário local
+ * Usado para salvar time entries sem conversão de timezone
+ */
+export function localTimeToUTC(date: Date): string {
+  return new Date(
+    date.getTime() - date.getTimezoneOffset() * 60_000
+  ).toISOString()
+}

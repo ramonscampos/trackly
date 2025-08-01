@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { DashboardSidebar } from '@/components/home/DashboardSidebar'
 import { ProjectsList } from '@/components/home/ProjectsList'
 import { StatsGrid } from '@/components/home/StatsGrid'
+import { AddTimeEntryModal } from '@/components/ui/add-time-entry-modal'
 import { getActiveTimer } from '@/lib/database/time-entries'
 import { useAuth } from '@/lib/hooks/useAuth'
 
@@ -11,9 +12,14 @@ export default function Home() {
   const { user } = useAuth()
   const [refreshKey, setRefreshKey] = useState(0)
   const [hasActiveTimer, setHasActiveTimer] = useState(false)
+  const [isAddTimeEntryModalOpen, setIsAddTimeEntryModalOpen] = useState(false)
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+    null
+  )
 
   const handleRefreshProjects = () => {
     setRefreshKey((prev) => prev + 1)
+    window.location.reload()
   }
 
   const handleTimerStateChange = () => {
@@ -61,12 +67,8 @@ export default function Home() {
           <ProjectsList
             hasActiveTimer={hasActiveTimer}
             onAddTimeEntry={(projectId) => {
-              // Aqui você pode implementar a lógica para abrir o modal de adicionar time entry
-              console.log('Adicionar time entry para projeto:', projectId)
-            }}
-            onStartTimer={(projectId) => {
-              // Aqui você pode implementar a lógica para iniciar o timer
-              console.log('Iniciar timer para projeto:', projectId)
+              setSelectedProjectId(projectId)
+              setIsAddTimeEntryModalOpen(true)
             }}
             refreshKey={refreshKey}
           />
@@ -76,6 +78,22 @@ export default function Home() {
           onTimerStateChange={handleTimerStateChange}
         />
       </div>
+
+      {/* Modal de adicionar time entry */}
+      <AddTimeEntryModal
+        isOpen={isAddTimeEntryModalOpen}
+        onClose={() => {
+          setIsAddTimeEntryModalOpen(false)
+          setSelectedProjectId(null)
+        }}
+        onTimeEntryAdded={() => {
+          setIsAddTimeEntryModalOpen(false)
+          setSelectedProjectId(null)
+          handleRefreshProjects()
+        }}
+        projectId={selectedProjectId!}
+        userId={user?.id || ''}
+      />
     </>
   )
 }

@@ -63,7 +63,6 @@ export function ProjectCard({
     try {
       await startTimer(user.id, projectId)
       setShowConfirmModal(false)
-      // Recarregar a página para atualizar o timer no sidebar
       window.location.reload()
     } catch (error) {
       console.error('Erro ao iniciar timer:', error)

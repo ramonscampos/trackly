@@ -293,18 +293,19 @@ export default function ProjectTimeEntriesPage({ params }: PageProps) {
   }
 
   const formatTime = (date: string) => {
-    return new Date(date).toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    // Extrair apenas a parte da hora da string UTC (HH:MM)
+    const timePart = date.split('T')[1].split(':')
+    const hours = timePart[0]
+    const minutes = timePart[1]
+    return `${hours}:${minutes}`
   }
 
   const formatDayDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
+    // Usar UTC para evitar conversão de timezone
+    const day = date.getUTCDate().toString().padStart(2, '0')
+    const month = (date.getUTCMonth() + 1).toString().padStart(2, '0')
+    const year = date.getUTCFullYear()
+    return `${day}/${month}/${year}`
   }
 
   const formatDayOfWeek = (date: Date) => {

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Input } from '@/components/ui/input'
 import { createTimeEntry } from '@/lib/database/time-entries'
+import { localTimeToUTC } from '@/lib/utils'
 
 interface AddTimeEntryModalProps {
   isOpen: boolean
@@ -48,14 +49,9 @@ export function AddTimeEntryModal({
     const [endHour, endMinute] = endTime.split(':').map(Number)
     endDateTime.setHours(endHour, endMinute, 0, 0)
 
-    // Ajustar para o fuso horário local
-    const startISO = new Date(
-      startDateTime.getTime() - startDateTime.getTimezoneOffset() * 60_000
-    ).toISOString()
-
-    const endISO = new Date(
-      endDateTime.getTime() - endDateTime.getTimezoneOffset() * 60_000
-    ).toISOString()
+    // Usar função utilitária para consistência com o timer
+    const startISO = localTimeToUTC(startDateTime)
+    const endISO = localTimeToUTC(endDateTime)
 
     // Validar se fim é depois do início
     if (endDateTime <= startDateTime) {

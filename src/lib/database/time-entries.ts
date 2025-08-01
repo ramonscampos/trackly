@@ -1,5 +1,9 @@
 import { supabase } from '@/lib/supabase-client'
-import { calculateTimeInMinutes, formatMinutesToHours } from '@/lib/utils'
+import {
+  calculateTimeInMinutes,
+  formatMinutesToHours,
+  localTimeToUTC,
+} from '@/lib/utils'
 import type {
   CreateTimeEntry,
   TimeEntry,
@@ -60,6 +64,7 @@ export async function getTimeEntriesByUserId(
       )
     `)
     .eq('user_id', userId)
+    .not('ended_at', 'is', null) // Excluir timers abertos
     .order('started_at', { ascending: false })
 
   if (error) {
@@ -84,6 +89,7 @@ export async function getTimeEntriesByProjectId(
       )
     `)
     .eq('project_id', projectId)
+    .not('ended_at', 'is', null) // Excluir timers abertos
     .order('started_at', { ascending: false })
 
   if (error) {
@@ -111,6 +117,7 @@ export async function getUserTimeEntriesByProjectId(
     `)
     .eq('project_id', projectId)
     .eq('user_id', userId)
+    .not('ended_at', 'is', null) // Excluir timers abertos
     .order('started_at', { ascending: false })
 
   if (error) {
@@ -135,6 +142,7 @@ export async function getTimeEntriesByOrganizationId(
       )
     `)
     .eq('project.organization.id', organizationId)
+    .not('ended_at', 'is', null) // Excluir timers abertos
     .order('started_at', { ascending: false })
 
   if (error) {
@@ -163,6 +171,7 @@ export async function getTimeEntriesByDateRange(
     .eq('user_id', userId)
     .gte('started_at', startDate)
     .lte('started_at', endDate)
+    .not('ended_at', 'is', null) // Excluir timers abertos
     .order('started_at', { ascending: false })
 
   if (error) {
@@ -445,7 +454,7 @@ export async function startTimer(
   const timeEntry = await createTimeEntry({
     user_id: userId,
     project_id: projectId,
-    started_at: new Date().toISOString(),
+    started_at: localTimeToUTC(new Date()),
   })
 
   return timeEntry
@@ -458,7 +467,7 @@ export async function stopTimer(userId: string): Promise<TimeEntry | null> {
   }
 
   const updatedTimer = await updateTimeEntry(activeTimer.id, {
-    ended_at: new Date().toISOString(),
+    ended_at: localTimeToUTC(new Date()),
   })
 
   return updatedTimer

@@ -64,7 +64,10 @@ export function TimerCard({
       // Atualizar tempo a cada segundo
       interval = setInterval(() => {
         const startTime = new Date(activeTimer.started_at).getTime()
-        const now = new Date().getTime()
+        // Converter now para UTC para comparar com started_at que está em UTC
+        const now =
+          new Date().getTime() - new Date().getTimezoneOffset() * 60_000
+
         setElapsedTime(now - startTime)
       }, 1000)
     }

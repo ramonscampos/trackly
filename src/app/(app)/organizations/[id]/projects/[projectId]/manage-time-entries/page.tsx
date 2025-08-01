@@ -258,13 +258,18 @@ export default function ManageTimeEntriesPage({ params }: PageProps) {
   }
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    // Extrair data e hora da string UTC sem conversão de timezone
+    const dateTime = date.split('T')
+    const datePart = dateTime[0].split('-')
+    const timePart = dateTime[1].split(':')
+
+    const day = datePart[2]
+    const month = datePart[1]
+    const year = datePart[0]
+    const hour = timePart[0]
+    const minute = timePart[1]
+
+    return `${day}/${month}/${year} ${hour}:${minute}`
   }
 
   if (!user) {
