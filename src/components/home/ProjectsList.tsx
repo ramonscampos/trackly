@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { getUserProjectsWithTimeEntries } from '@/lib/database/time-entries'
+import { getUserProjectsWithTimeEntriesThisWeek } from '@/lib/database/time-entries'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { usePermissions } from '@/lib/hooks/usePermissions'
 import { ProjectCard } from './ProjectCard'
@@ -40,7 +40,7 @@ export function ProjectsList({
 
       setIsLoading(true)
       try {
-        const data = await getUserProjectsWithTimeEntries(user.id)
+        const data = await getUserProjectsWithTimeEntriesThisWeek(user.id)
         setOrganizations(data)
       } catch (error) {
         console.error('Erro ao carregar projetos:', error)

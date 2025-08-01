@@ -9,6 +9,7 @@ interface ConfirmDeleteModalProps {
   onConfirm: () => void
   title: string
   message: string
+  confirmText?: string
   isLoading?: boolean
 }
 
@@ -18,6 +19,7 @@ export function ConfirmDeleteModal({
   onConfirm,
   title,
   message,
+  confirmText = 'Deletar',
   isLoading = false,
 }: ConfirmDeleteModalProps) {
   if (!isOpen) return null
@@ -25,9 +27,11 @@ export function ConfirmDeleteModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
+      <button
+        aria-label="Fechar modal"
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
+        type="button"
       />
 
       {/* Modal */}
@@ -69,12 +73,12 @@ export function ConfirmDeleteModal({
             {isLoading ? (
               <>
                 <Trash2 className="mr-2 h-4 w-4 animate-spin" />
-                Deletando...
+                Processando...
               </>
             ) : (
               <>
                 <Trash2 className="mr-2 h-4 w-4" />
-                Deletar
+                {confirmText}
               </>
             )}
           </Button>

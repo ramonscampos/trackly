@@ -8,6 +8,7 @@ import {
   getYesterdayHoursByUserId,
 } from '@/lib/database/time-entries'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { formatHoursToDisplay } from '@/lib/utils'
 
 export function TodayHoursCard() {
   const { user } = useAuth()
@@ -39,17 +40,7 @@ export function TodayHoursCard() {
   }, [user])
 
   const formatHours = (hours: number): string => {
-    if (hours === 0) return '0h'
-
-    const wholeHours = Math.floor(hours)
-    const minutes = Math.round((hours - wholeHours) * 60)
-
-    // Sempre mostrar minutos quando houver, mesmo que seja 0
-    if (wholeHours === 0) {
-      return `${minutes}m`
-    }
-
-    return `${wholeHours}h${minutes.toString().padStart(2, '0')}m`
+    return formatHoursToDisplay(hours)
   }
 
   const calculateChange = (

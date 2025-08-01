@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase-client'
+import { calculateTimeInMinutes, formatMinutesToHours } from '@/lib/utils'
 import type {
   CreateTimeEntry,
   TimeEntry,
@@ -303,6 +304,40 @@ export async function getActiveProjectsCountByUserId(
   }
 }
 
+export async function getUserProjectsWithTimeEntriesThisWeek(
+  userId: string
+): Promise<
+  Array<{
+    organization: {
+      id: string
+      name: string
+    }
+    projects: Array<{
+      id: string
+      name: string
+      is_finished: boolean
+      total_hours: string
+      last_activity: string
+      last_activity_date: string
+    }>
+  }>
+> {
+  const today = new Date()
+  const dayOfWeek = today.getDay() // 0 = domingo, 1 = segunda, etc.
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // Ajusta para segunda = 0
+
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - daysFromMonday)
+  monday.setHours(0, 0, 0, 0)
+
+  const startOfWeek = monday.toISOString()
+  const endOfWeek = new Date(
+    monday.getTime() + 7 * 24 * 60 * 60 * 1000
+  ).toISOString()
+
+  return await getUserProjectsWithTimeEntries(userId, startOfWeek, endOfWeek)
+}
+
 export async function getTotalHoursByDateRange(
   userId: string,
   startDate: string,
@@ -320,13 +355,12 @@ export async function getTotalHoursByDateRange(
     return 0
   }
 
-  return (
+  const totalMinutes =
     data?.reduce((total, entry) => {
-      const start = new Date(entry.started_at)
-      const end = new Date(entry.ended_at)
-      return total + (end.getTime() - start.getTime()) / (1000 * 60 * 60) // Converter para horas
+      return total + calculateTimeInMinutes(entry.started_at, entry.ended_at)
     }, 0) ?? 0
-  )
+
+  return totalMinutes / 60 // Converter minutos para horas
 }
 
 export async function createTimeEntry(
@@ -437,13 +471,9 @@ export async function getActiveTimer(
     .select('*')
     .eq('user_id', userId)
     .is('ended_at', null)
-    .single()
+    .maybeSingle()
 
   if (error) {
-    if (error.code === 'PGRST116') {
-      // Nenhum timer ativo encontrado
-      return null
-    }
     console.error('Erro ao buscar timer ativo:', error)
     return null
   }
@@ -468,13 +498,11 @@ type OrganizationData = {
 function calculateTotalMinutes(
   entries: Array<{ started_at: string; ended_at: string | null }>
 ): number {
-  return entries.reduce((total, entry) => {
+  return entries.reduce((acc, entry) => {
     if (entry.ended_at) {
-      const start = new Date(entry.started_at)
-      const end = new Date(entry.ended_at)
-      return total + Math.floor((end.getTime() - start.getTime()) / (1000 * 60))
+      return acc + calculateTimeInMinutes(entry.started_at, entry.ended_at)
     }
-    return total
+    return acc
   }, 0)
 }
 
@@ -513,9 +541,7 @@ function formatRelativeTime(lastActivity: string): string {
 
 // Função auxiliar para formatar horas
 function formatHours(totalMinutes: number): string {
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
+  return formatMinutesToHours(totalMinutes)
 }
 
 // Função auxiliar para processar projeto
@@ -534,7 +560,11 @@ function processProject(project: ProjectEntry) {
   }
 }
 
-export async function getUserProjectsWithTimeEntries(userId: string): Promise<
+export async function getUserProjectsWithTimeEntries(
+  userId: string,
+  startDate?: string,
+  endDate?: string
+): Promise<
   Array<{
     organization: {
       id: string
@@ -550,7 +580,7 @@ export async function getUserProjectsWithTimeEntries(userId: string): Promise<
     }>
   }>
 > {
-  const { data, error } = await supabase
+  let query = supabase
     .from('time_entries')
     .select(`
       *,
@@ -566,7 +596,16 @@ export async function getUserProjectsWithTimeEntries(userId: string): Promise<
     `)
     .eq('user_id', userId)
     .not('project_id', 'is', null)
-    .order('started_at', { ascending: false })
+
+  // Aplicar filtros de data se fornecidos
+  if (startDate) {
+    query = query.gte('started_at', startDate)
+  }
+  if (endDate) {
+    query = query.lte('started_at', endDate)
+  }
+
+  const { data, error } = await query.order('started_at', { ascending: false })
 
   if (error) {
     console.error('Erro ao buscar projetos com apontamentos:', error)

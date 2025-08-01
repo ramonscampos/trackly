@@ -8,6 +8,7 @@ import {
   getThisWeekHoursByUserId,
 } from '@/lib/database/time-entries'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { formatHoursToDisplay } from '@/lib/utils'
 
 export function WeekHoursCard() {
   const { user } = useAuth()
@@ -39,18 +40,7 @@ export function WeekHoursCard() {
   }, [user])
 
   const formatHours = (hours: number): string => {
-    if (hours === 0) return '0h'
-
-    const wholeHours = Math.floor(hours)
-    const minutes = Math.round((hours - wholeHours) * 60)
-
-    // Se for menos de 1 hora, mostrar apenas minutos
-    if (wholeHours === 0) {
-      return `${minutes}m`
-    }
-
-    // Se for 1 hora ou mais, mostrar horas e minutos
-    return `${wholeHours}h${minutes.toString().padStart(2, '0')}m`
+    return formatHoursToDisplay(hours)
   }
 
   const calculateChange = (

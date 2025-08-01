@@ -335,3 +335,42 @@ export async function processAllPendingInvites(
 
   return processedCount
 }
+
+export async function getPendingInvitesByOrganization(
+  organizationId: string
+): Promise<
+  Array<{
+    id: string
+    organization_id: string
+    email: string
+    role: 'admin' | 'manager' | 'user'
+    created_at: string
+  }>
+> {
+  const { data, error } = await supabase
+    .from('organization_invites')
+    .select('*')
+    .eq('organization_id', organizationId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Erro ao buscar convites da organização:', error)
+    return []
+  }
+
+  return data || []
+}
+
+export async function revokeInvite(inviteId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('organization_invites')
+    .delete()
+    .eq('id', inviteId)
+
+  if (error) {
+    console.error('Erro ao revogar convite:', error)
+    return false
+  }
+
+  return true
+}
