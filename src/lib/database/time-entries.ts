@@ -347,6 +347,154 @@ export async function getUserProjectsWithTimeEntriesThisWeek(
   return await getUserProjectsWithTimeEntries(userId, startOfWeek, endOfWeek)
 }
 
+export async function getUserAllProjects(userId: string): Promise<
+  Array<{
+    organization: {
+      id: string
+      name: string
+    }
+    projects: Array<{
+      id: string
+      name: string
+      is_finished: boolean
+      total_hours: string
+      last_activity: string
+      last_activity_date: string
+    }>
+  }>
+> {
+  // Buscar todas as organizações do usuário
+  const { data: orgUsers, error: orgError } = await supabase
+    .from('organization_users')
+    .select(`
+      organization:organizations(
+        id,
+        name
+      )
+    `)
+    .eq('user_id', userId)
+
+  if (orgError) {
+    console.error('Erro ao buscar organizações do usuário:', orgError)
+    return []
+  }
+
+  if (!orgUsers || orgUsers.length === 0) {
+    return []
+  }
+
+  // Buscar todos os projetos das organizações do usuário
+  const orgIds = orgUsers
+    .map((orgUser) => orgUser.organization?.id)
+    .filter(Boolean)
+
+  if (orgIds.length === 0) {
+    return []
+  }
+
+  const { data: allProjects, error: projectsError } = await supabase
+    .from('projects')
+    .select('id, name, is_finished, organization_id')
+    .in('organization_id', orgIds)
+
+  if (projectsError || !allProjects || allProjects.length === 0) {
+    console.error('Erro ao buscar projetos:', projectsError)
+    return []
+  }
+
+  // Buscar time entries para todos os projetos
+  const projectIds = allProjects.map((project) => project.id)
+  const { data: timeEntries } = await supabase
+    .from('time_entries')
+    .select('project_id, started_at, ended_at')
+    .in('project_id', projectIds)
+    .eq('user_id', userId)
+    .not('ended_at', 'is', null)
+    .order('started_at', { ascending: false })
+
+  // Agrupar time entries por projeto
+  const timeEntriesByProject = new Map<
+    string,
+    Array<{ started_at: string; ended_at: string }>
+  >()
+  timeEntries?.forEach((entry) => {
+    if (!timeEntriesByProject.has(entry.project_id)) {
+      timeEntriesByProject.set(entry.project_id, [])
+    }
+    timeEntriesByProject.get(entry.project_id)!.push(entry)
+  })
+
+  // Agrupar projetos por organização
+  const orgMap = new Map<
+    string,
+    {
+      organization: { id: string; name: string }
+      projects: Array<{
+        id: string
+        name: string
+        is_finished: boolean
+        total_hours: string
+        last_activity: string
+        last_activity_date: string
+      }>
+    }
+  >()
+
+  allProjects.forEach((project) => {
+    const orgUser = orgUsers.find(
+      (ou) => ou.organization?.id === project.organization_id
+    )
+    if (!(orgUser && orgUser.organization)) return
+
+    const orgId = orgUser.organization.id
+    const entries = timeEntriesByProject.get(project.id) || []
+    const totalMinutes = entries.reduce((acc, entry) => {
+      return acc + calculateTimeInMinutes(entry.started_at, entry.ended_at)
+    }, 0)
+
+    // Encontrar a última atividade baseada no ended_at (quando o apontamento terminou)
+    const lastActivity =
+      entries.length > 0
+        ? entries.reduce((last, entry) => {
+            const activityDate = new Date(entry.ended_at.split('+')[0])
+            const lastDate = last ? new Date(last.split('+')[0]) : new Date(0)
+            return activityDate > lastDate ? entry.ended_at : last
+          }, '')
+        : ''
+
+    const projectData = {
+      id: project.id,
+      name: project.name,
+      is_finished: project.is_finished,
+      total_hours: formatMinutesToHours(totalMinutes),
+      last_activity: formatRelativeTime(lastActivity),
+      last_activity_date: lastActivity,
+    }
+
+    if (!orgMap.has(orgId)) {
+      orgMap.set(orgId, {
+        organization: {
+          id: orgId,
+          name: orgUser.organization.name,
+        },
+        projects: [],
+      })
+    }
+
+    orgMap.get(orgId)!.projects.push(projectData)
+  })
+
+  // Converter para array e ordenar
+  return Array.from(orgMap.values()).map((org) => ({
+    organization: org.organization,
+    projects: org.projects.sort((a, b) => {
+      const aDate = new Date(a.last_activity_date)
+      const bDate = new Date(b.last_activity_date)
+      return bDate.getTime() - aDate.getTime()
+    }),
+  }))
+}
+
 export async function getTotalHoursByDateRange(
   userId: string,
   startDate: string,
@@ -521,9 +669,12 @@ function findLastActivity(
   entries: Array<{ started_at: string; ended_at: string | null }>
 ): string {
   return entries.reduce((last, entry) => {
-    const entryDate = new Date(entry.started_at)
-    if (!last || entryDate > new Date(last)) {
-      return entry.started_at
+    // Usar ended_at se disponível, senão usar started_at
+    const activityDate = entry.ended_at
+      ? new Date(entry.ended_at.split('+')[0])
+      : new Date(entry.started_at.split('+')[0])
+    if (!last || activityDate > new Date(last.split('+')[0])) {
+      return entry.ended_at || entry.started_at
     }
     return last
   }, '')
@@ -531,14 +682,29 @@ function findLastActivity(
 
 // Função auxiliar para formatar tempo relativo
 function formatRelativeTime(lastActivity: string): string {
-  const lastActivityDate = new Date(lastActivity)
+  if (!lastActivity) return 'Nunca'
+
+  // Extrair apenas a parte da data/hora sem timezone para manter o horário original
+  const dateOnly = lastActivity.split('+')[0].split('T')[0]
+  const timeOnly = lastActivity.split('+')[0].split('T')[1]
+  const lastActivityDate = new Date(`${dateOnly}T${timeOnly}`)
   const now = new Date()
   const diffMs = now.getTime() - lastActivityDate.getTime()
+
+  // Se a data é futura, retornar "Agora mesmo"
+  if (diffMs < 0) {
+    return 'Agora mesmo'
+  }
+
+  const diffMinutes = Math.floor(diffMs / (1000 * 60))
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffHours < 1) {
+  if (diffMinutes < 1) {
     return 'Agora mesmo'
+  }
+  if (diffMinutes < 60) {
+    return `${diffMinutes} minuto${diffMinutes !== 1 ? 's' : ''} atrás`
   }
   if (diffHours < 24) {
     return `${diffHours} hora${diffHours !== 1 ? 's' : ''} atrás`

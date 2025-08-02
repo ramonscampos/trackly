@@ -3,7 +3,7 @@
 import { FolderOpen, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { getUserProjectsWithTimeEntriesThisWeek } from '@/lib/database/time-entries'
+import { getUserAllProjects } from '@/lib/database/time-entries'
 import { useAuth } from '@/lib/hooks/useAuth'
 
 interface SelectProjectModalProps {
@@ -39,7 +39,7 @@ export function SelectProjectModal({
 
       setIsLoading(true)
       try {
-        const data = await getUserProjectsWithTimeEntriesThisWeek(user.id)
+        const data = await getUserAllProjects(user.id)
         setProjects(data)
       } catch (error) {
         console.error('Erro ao carregar projetos:', error)

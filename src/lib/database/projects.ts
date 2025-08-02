@@ -177,3 +177,104 @@ export function finishProject(id: string): Promise<Project | null> {
 export function reactivateProject(id: string): Promise<Project | null> {
   return updateProject(id, { is_finished: false })
 }
+
+export async function getUserAllActiveProjects(userId: string): Promise<
+  Array<{
+    organization: {
+      id: string
+      name: string
+    }
+    projects: Array<{
+      id: string
+      name: string
+      is_finished: boolean
+    }>
+  }>
+> {
+  // Buscar todas as organizações do usuário
+  const { data: orgUsers, error: orgError } = await supabase
+    .from('organization_users')
+    .select(`
+      organization:organizations(
+        id,
+        name
+      )
+    `)
+    .eq('user_id', userId)
+
+  if (orgError) {
+    console.error('Erro ao buscar organizações do usuário:', orgError)
+    return []
+  }
+
+  if (!orgUsers || orgUsers.length === 0) {
+    return []
+  }
+
+  // Buscar todos os projetos ativos das organizações do usuário
+  const orgIds = orgUsers
+    .map((orgUser) => orgUser.organization?.id)
+    .filter(Boolean)
+
+  if (orgIds.length === 0) {
+    return []
+  }
+
+  const { data: allProjects, error: projectsError } = await supabase
+    .from('projects')
+    .select('id, name, is_finished, organization_id')
+    .in('organization_id', orgIds)
+    .eq('is_finished', false)
+    .order('name', { ascending: true })
+
+  if (projectsError || !allProjects || allProjects.length === 0) {
+    console.error('Erro ao buscar projetos:', projectsError)
+    return []
+  }
+
+  // Agrupar projetos por organização
+  const orgMap = new Map<
+    string,
+    {
+      organization: { id: string; name: string }
+      projects: Array<{
+        id: string
+        name: string
+        is_finished: boolean
+      }>
+    }
+  >()
+
+  allProjects.forEach((project) => {
+    const orgUser = orgUsers.find(
+      (ou) => ou.organization?.id === project.organization_id
+    )
+    if (!(orgUser?.organization)) return
+
+    const orgId = orgUser.organization.id
+
+    const projectData = {
+      id: project.id,
+      name: project.name,
+      is_finished: project.is_finished,
+    }
+
+    if (!orgMap.has(orgId)) {
+      orgMap.set(orgId, {
+        organization: {
+          id: orgId,
+          name: orgUser.organization.name,
+        },
+        projects: [],
+      })
+    }
+
+    orgMap.get(orgId)!.projects.push(projectData)
+  })
+
+  // Converter para array e ordenar
+  return Array.from(orgMap.values()).map((org) => ({
+    organization: org.organization,
+    projects: org.projects.sort((a, b) => a.name.localeCompare(b.name)),
+  }))
+}
