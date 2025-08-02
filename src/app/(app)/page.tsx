@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { DashboardSidebar } from '@/components/home/DashboardSidebar'
 import { ProjectsList } from '@/components/home/ProjectsList'
 import { StatsGrid } from '@/components/home/StatsGrid'
+
 import { AddTimeEntryModal } from '@/components/ui/add-time-entry-modal'
 import { getActiveTimer } from '@/lib/database/time-entries'
 import { useAuth } from '@/lib/hooks/useAuth'

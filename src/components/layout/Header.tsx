@@ -1,9 +1,20 @@
 'use client'
 
-import { Clock, LogOut, Search, User as UserIcon, Zap } from 'lucide-react'
+import {
+  Building,
+  Clock,
+  Folder,
+  LogOut,
+  Search,
+  User as UserIcon,
+  Zap,
+} from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { getUserAllProjects } from '@/lib/database/time-entries'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface HeaderProps {
   userEmail: string
@@ -12,6 +23,65 @@ interface HeaderProps {
 }
 
 export function Header({ userEmail, userAvatar, onSignOut }: HeaderProps) {
+  const { user } = useAuth()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchResults, setSearchResults] = useState<
+    Array<{
+      id: string
+      name: string
+      organization: string
+      organizationId: string
+    }>
+  >([])
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setIsSearchOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setSearchTerm(value)
+
+    if (value.length >= 2 && user) {
+      try {
+        const projects = await getUserAllProjects(user.id)
+        const allProjects = projects.flatMap((org) =>
+          org.projects.map((project) => ({
+            id: project.id,
+            name: project.name,
+            organization: org.organization.name,
+            organizationId: org.organization.id,
+          }))
+        )
+
+        const filtered = allProjects.filter(
+          (project) =>
+            project.name.toLowerCase().includes(value.toLowerCase()) ||
+            project.organization.toLowerCase().includes(value.toLowerCase())
+        )
+
+        setSearchResults(filtered.slice(0, 5)) // Limitar a 5 resultados
+        setIsSearchOpen(true)
+      } catch (error) {
+        console.error('Erro ao buscar projetos:', error)
+      }
+    } else {
+      setSearchResults([])
+      setIsSearchOpen(false)
+    }
+  }
   return (
     <header className="fixed top-0 right-0 left-0 z-50 border-gray-700 border-b bg-gray-900/50 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -46,13 +116,50 @@ export function Header({ userEmail, userAvatar, onSignOut }: HeaderProps) {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="hidden items-center space-x-2 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 sm:flex">
-              <Search className="h-4 w-4 text-gray-400" />
-              <input
-                className="w-48 bg-transparent text-gray-300 text-sm placeholder-gray-500 focus:outline-none"
-                placeholder="Buscar projetos..."
-                type="text"
-              />
+            <div className="relative hidden sm:block" ref={searchRef}>
+              <div className="flex items-center space-x-2 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2">
+                <Search className="h-4 w-4 text-gray-400" />
+                <input
+                  className="w-48 bg-transparent text-gray-300 text-sm placeholder-gray-500 focus:outline-none"
+                  onChange={handleSearchChange}
+                  onFocus={() =>
+                    searchTerm.length >= 2 && setIsSearchOpen(true)
+                  }
+                  placeholder="Buscar projetos..."
+                  type="text"
+                  value={searchTerm}
+                />
+              </div>
+
+              {/* Dropdown de resultados */}
+              {isSearchOpen && searchResults.length > 0 && (
+                <div className="absolute top-full right-0 left-0 mt-1 rounded-lg border border-gray-700 bg-gray-800 shadow-lg">
+                  {searchResults.map((project) => (
+                    <Link
+                      className="flex items-center space-x-3 px-3 py-2 text-gray-300 transition-colors hover:bg-gray-700"
+                      href={`/organizations/${project.organizationId}/projects/${project.id}/time-entries`}
+                      key={project.id}
+                      onClick={() => {
+                        setIsSearchOpen(false)
+                        setSearchTerm('')
+                      }}
+                    >
+                      <Folder className="h-4 w-4 text-gray-400" />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate font-medium text-sm">
+                          {project.name}
+                        </div>
+                        <div className="flex items-center space-x-1 text-gray-500 text-xs">
+                          <Building className="h-3 w-3" />
+                          <span className="truncate">
+                            {project.organization}
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-3">
