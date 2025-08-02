@@ -81,8 +81,8 @@ export async function getOrganizationsByUserId(
     return []
   }
 
-  const organizationIds = data.map(item => item.organization_id)
-  
+  const organizationIds = data.map((item) => item.organization_id)
+
   const { data: organizations, error: orgError } = await supabase
     .from('organizations')
     .select('*')
@@ -117,7 +117,7 @@ export async function createOrganization(
       .insert({
         organization_id: data.id,
         user_id: organization.created_by,
-        role: 'admin'
+        role: 'admin',
       })
 
     if (userError) {

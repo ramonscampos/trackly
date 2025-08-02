@@ -6,6 +6,7 @@ import {
 } from '@/lib/utils'
 import type {
   CreateTimeEntry,
+  OrganizationUserWithOrganization,
   TimeEntry,
   TimeEntryWithDetails,
   UpdateTimeEntry,
@@ -364,7 +365,7 @@ export async function getUserAllProjects(userId: string): Promise<
   }>
 > {
   // Buscar todas as organizações do usuário
-  const { data: orgUsers, error: orgError } = await supabase
+  const { data: orgUsers, error: orgError } = (await supabase
     .from('organization_users')
     .select(`
       organization:organizations(
@@ -372,7 +373,10 @@ export async function getUserAllProjects(userId: string): Promise<
         name
       )
     `)
-    .eq('user_id', userId)
+    .eq('user_id', userId)) as {
+    data: OrganizationUserWithOrganization[] | null
+    error: unknown
+  }
 
   if (orgError) {
     console.error('Erro ao buscar organizações do usuário:', orgError)

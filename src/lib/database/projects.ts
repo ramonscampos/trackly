@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase-client'
 import type {
   CreateProject,
+  OrganizationUserWithOrganization,
   Project,
   ProjectWithOrganization,
   UpdateProject,
@@ -192,7 +193,7 @@ export async function getUserAllActiveProjects(userId: string): Promise<
   }>
 > {
   // Buscar todas as organizações do usuário
-  const { data: orgUsers, error: orgError } = await supabase
+  const { data: orgUsers, error: orgError } = (await supabase
     .from('organization_users')
     .select(`
       organization:organizations(
@@ -200,7 +201,10 @@ export async function getUserAllActiveProjects(userId: string): Promise<
         name
       )
     `)
-    .eq('user_id', userId)
+    .eq('user_id', userId)) as {
+    data: OrganizationUserWithOrganization[] | null
+    error: unknown
+  }
 
   if (orgError) {
     console.error('Erro ao buscar organizações do usuário:', orgError)
@@ -249,7 +253,7 @@ export async function getUserAllActiveProjects(userId: string): Promise<
     const orgUser = orgUsers.find(
       (ou) => ou.organization?.id === project.organization_id
     )
-    if (!(orgUser?.organization)) return
+    if (!orgUser?.organization) return
 
     const orgId = orgUser.organization.id
 

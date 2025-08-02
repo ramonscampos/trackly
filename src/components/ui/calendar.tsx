@@ -114,10 +114,7 @@ function Calendar({
           'text-gray-500 aria-selected:text-gray-500',
           defaultClassNames.outside
         ),
-        disabled: cn(
-          'text-gray-500 opacity-50',
-          defaultClassNames.disabled
-        ),
+        disabled: cn('text-gray-500 opacity-50', defaultClassNames.disabled),
         hidden: cn('invisible', defaultClassNames.hidden),
         ...classNames,
       }}
@@ -182,7 +179,7 @@ function CalendarDayButton({
   return (
     <Button
       className={cn(
-        'flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 font-normal leading-none text-white hover:bg-gray-600 data-[range-end=true]:rounded-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-start=true]:rounded-l-md data-[range-end=true]:bg-blue-600 data-[range-middle=true]:bg-blue-500 data-[range-start=true]:bg-blue-600 data-[selected-single=true]:bg-blue-600 data-[range-end=true]:text-white data-[range-middle=true]:text-white data-[range-start=true]:text-white data-[selected-single=true]:text-white group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-blue-500 group-data-[focused=true]/day:ring-[3px] group-data-[focused=true]/day:ring-blue-500/50 [&>span]:text-xs [&>span]:opacity-70',
+        'flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 font-normal text-white leading-none hover:bg-gray-600 data-[range-end=true]:rounded-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-start=true]:rounded-l-md data-[range-end=true]:bg-blue-600 data-[range-middle=true]:bg-blue-500 data-[range-start=true]:bg-blue-600 data-[selected-single=true]:bg-blue-600 data-[range-end=true]:text-white data-[range-middle=true]:text-white data-[range-start=true]:text-white data-[selected-single=true]:text-white group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border-blue-500 group-data-[focused=true]/day:ring-[3px] group-data-[focused=true]/day:ring-blue-500/50 [&>span]:text-xs [&>span]:opacity-70',
         defaultClassNames.day,
         className
       )}

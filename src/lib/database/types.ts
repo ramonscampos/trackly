@@ -115,4 +115,14 @@ export interface OrganizationWithProjects extends Organization {
 
 export interface OrganizationUserWithProfile extends OrganizationUser {
   profile: Profile
-} 
+}
+
+// Tipos para queries do Supabase com joins
+export interface OrganizationUserWithOrganization {
+  id: string
+  organization_id: string
+  user_id: string
+  role: 'admin' | 'manager' | 'user'
+  created_at: string
+  organization: Organization
+}

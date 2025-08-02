@@ -1,11 +1,11 @@
 'use client'
 
+import { ArrowLeft, Save } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { use, useState } from 'react'
-import { ArrowLeft, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/lib/hooks/useAuth'
 import { createProject } from '@/lib/database/projects'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface PageProps {
   params: Promise<{
@@ -18,7 +18,7 @@ export default function NewProjectPage({ params }: PageProps) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   const { id: organizationId } = use(params)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +31,7 @@ export default function NewProjectPage({ params }: PageProps) {
       const newProject = await createProject({
         organization_id: organizationId,
         name: name.trim(),
-        is_finished: false
+        is_finished: false,
       })
 
       if (newProject) {
@@ -90,10 +90,7 @@ export default function NewProjectPage({ params }: PageProps) {
           </div>
 
           <div className="flex space-x-4 pt-6">
-            <Button
-              disabled={!name.trim() || isSubmitting}
-              type="submit"
-            >
+            <Button disabled={!name.trim() || isSubmitting} type="submit">
               <Save className="mr-2 h-4 w-4" />
               {isSubmitting ? 'Criando...' : 'Criar Projeto'}
             </Button>
@@ -110,4 +107,4 @@ export default function NewProjectPage({ params }: PageProps) {
       </div>
     </>
   )
-} 
+}

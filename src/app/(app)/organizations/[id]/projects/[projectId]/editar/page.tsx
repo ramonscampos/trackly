@@ -1,13 +1,13 @@
 'use client'
 
+import { ArrowLeft, Save } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { use, useEffect, useState } from 'react'
-import { ArrowLeft, Save } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { Button } from '@/components/ui/button'
 import { getProjectById, updateProject } from '@/lib/database/projects'
 import type { Project } from '@/lib/database/types'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface PageProps {
   params: Promise<{
@@ -23,7 +23,7 @@ export default function EditProjectPage({ params }: PageProps) {
   const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   const { id: organizationId, projectId } = use(params)
 
   useEffect(() => {
@@ -57,12 +57,12 @@ export default function EditProjectPage({ params }: PageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!name.trim() || !project) return
+    if (!(name.trim() && project)) return
 
     setIsSubmitting(true)
     try {
       const updatedProject = await updateProject(project.id, {
-        name: name.trim()
+        name: name.trim(),
       })
 
       if (updatedProject) {
@@ -106,9 +106,7 @@ export default function EditProjectPage({ params }: PageProps) {
           Voltar
         </Button>
         <h1 className="font-bold text-3xl text-white">Editar Projeto</h1>
-        <p className="mt-2 text-gray-400">
-          Atualize as informações do projeto
-        </p>
+        <p className="mt-2 text-gray-400">Atualize as informações do projeto</p>
       </div>
 
       <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-8 backdrop-blur-sm">
@@ -133,10 +131,7 @@ export default function EditProjectPage({ params }: PageProps) {
           </div>
 
           <div className="flex space-x-4 pt-6">
-            <Button
-              disabled={!name.trim() || isSubmitting}
-              type="submit"
-            >
+            <Button disabled={!name.trim() || isSubmitting} type="submit">
               <Save className="mr-2 h-4 w-4" />
               {isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
@@ -153,4 +148,4 @@ export default function EditProjectPage({ params }: PageProps) {
       </div>
     </>
   )
-} 
+}

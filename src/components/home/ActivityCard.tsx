@@ -36,4 +36,4 @@ export function ActivityCard({ activities }: ActivityCardProps) {
       </div>
     </div>
   )
-} 
+}
