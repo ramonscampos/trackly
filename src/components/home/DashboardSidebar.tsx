@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { TimerCard } from '@/components/dashboard/TimerCard'
 import { AddTimeEntryModal } from '@/components/ui/add-time-entry-modal'
@@ -64,20 +64,23 @@ export function DashboardSidebar({
         userId={user.id}
       />
 
-      {/* Botão para adicionar time entry */}
-      <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-        <h3 className="mb-3 font-medium text-white">Adicionar Apontamento</h3>
-        <p className="mb-4 text-gray-400 text-sm">
-          Adicione manualmente um apontamento de horas
-        </p>
-        <Button
-          className="w-full cursor-pointer"
-          onClick={handleAddTimeEntry}
-          size="sm"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Novo Apontamento
-        </Button>
+      {/* Card para adicionar time entry */}
+      <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-6 backdrop-blur-sm">
+        <div className="text-center">
+          <div className="mb-4 flex justify-center">
+            <Plus className="h-12 w-12 text-gray-400" />
+          </div>
+          <h3 className="mb-2 font-semibold text-lg text-white">
+            Adicionar Apontamento
+          </h3>
+          <p className="mb-4 text-gray-400 text-sm">
+            Adicione manualmente um apontamento de horas
+          </p>
+          <Button className="cursor-pointer" onClick={handleAddTimeEntry}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Apontamento
+          </Button>
+        </div>
       </div>
 
       {/* Modal de seleção de projeto */}
