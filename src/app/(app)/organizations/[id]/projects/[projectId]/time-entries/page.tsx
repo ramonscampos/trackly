@@ -318,7 +318,7 @@ export default function ProjectTimeEntriesPage({ params }: PageProps) {
       'sexta-feira',
       'sábado',
     ]
-    return days[date.getDay()]
+    return days[date.getUTCDay()]
   }
 
   const calculateDayTotal = (entries: TimeEntryWithDetails[]) => {
