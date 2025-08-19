@@ -293,7 +293,7 @@ export default function ProjectTimeEntriesPage({ params }: PageProps) {
   }
 
   const formatTime = (date: string) => {
-    // Extrair apenas a parte da hora da string UTC (HH:MM)
+    // Extrair apenas a parte da hora da string UTC (HH:MM) - sem conversão de timezone
     const timePart = date.split('T')[1].split(':')
     const hours = timePart[0]
     const minutes = timePart[1]

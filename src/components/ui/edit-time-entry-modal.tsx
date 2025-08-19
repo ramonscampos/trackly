@@ -37,9 +37,11 @@ export function EditTimeEntryModal({
       setStartDate(startDateTime)
       setEndDate(endDateTime)
 
-      // Formatar hora para input time (HH:MM) - sem segundos
-      setStartTime(startDateTime.toTimeString().slice(0, 5))
-      setEndTime(endDateTime.toTimeString().slice(0, 5))
+      // Formatar hora para input time (HH:MM) - extrair da string UTC
+      const startTimePart = timeEntry.started_at.split('T')[1].split(':')
+      const endTimePart = timeEntry.ended_at.split('T')[1].split(':')
+      setStartTime(`${startTimePart[0]}:${startTimePart[1]}`)
+      setEndTime(`${endTimePart[0]}:${endTimePart[1]}`)
     }
   }, [timeEntry, isOpen])
 
