@@ -7,6 +7,7 @@ import { DatePicker } from '@/components/ui/date-picker'
 import { Input } from '@/components/ui/input'
 import { updateTimeEntry } from '@/lib/database/time-entries'
 import type { TimeEntryWithDetails } from '@/lib/database/types'
+import { localTimeToUTC } from '@/lib/utils'
 
 interface EditTimeEntryModalProps {
   isOpen: boolean
@@ -74,8 +75,8 @@ export function EditTimeEntryModal({
 
     try {
       const updated = await updateTimeEntry(timeEntry.id, {
-        started_at: newStartDate.toISOString(),
-        ended_at: newEndDate.toISOString(),
+        started_at: localTimeToUTC(newStartDate),
+        ended_at: localTimeToUTC(newEndDate),
       })
 
       if (updated) {
